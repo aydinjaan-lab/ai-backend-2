@@ -4,17 +4,17 @@ import fetch from "node-fetch";
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-/* 🔴 REPLACE THIS WITH YOUR REAL CLOUDFLARE URL */
+/* 🔴 CHANGE THIS IF CLOUDFLARE URL CHANGES */
 const OLLAMA_URL = "https://Victor-administrative-lamps-blues.trycloudflare.com";
 
 app.use(express.urlencoded({ extended: false }));
 
-/* Home / health check */
+/* Health check */
 app.get("/", (req, res) => {
   res.type("text").send("Nokia AI backend running");
 });
 
-/* Nokia-friendly AI page */
+/* Nokia AI main page */
 app.get("/ai", (req, res) => {
   res.type("html").send(`
 <!DOCTYPE html>
@@ -27,7 +27,7 @@ app.get("/ai", (req, res) => {
 
 <h3>Nokia AI</h3>
 
-<form method="POST" action="/ask">
+<form method="GET" action="/ask">
   <input type="text" name="q" size="20" autocomplete="off">
   <br><br>
   <button type="submit">Ask</button>
@@ -36,8 +36,8 @@ app.get("/ai", (req, res) => {
 <p>
 Tips:<br>
 - Ask clear questions<br>
-- Long answers may take time<br>
-- Type "continue" if the reply stops
+- Answers may take time<br>
+- Type "continue" if reply stops
 </p>
 
 </body>
@@ -45,11 +45,15 @@ Tips:<br>
   `);
 });
 
-/* Handle AI request */
-app.post("/ask", async (req, res) => {
+/* Handle BOTH GET and POST (Nokia fix) */
+app.all("/ask", async (req, res) => {
   res.type("html");
 
-  const q = (req.body.q || "").trim();
+  const q =
+    (req.method === "POST"
+      ? req.body.q
+      : req.query.q || "").trim();
+
   if (!q) {
     res.send("No question provided.<br><a href='/ai'>Back</a>");
     return;
@@ -67,10 +71,10 @@ app.post("/ask", async (req, res) => {
         prompt:
           "You are a careful, reliable assistant. " +
           "Reply in proper, clear English. " +
-          "Give thorough, well-structured explanations. " +
+          "Explain things thoroughly and logically. " +
           "Do not use emojis or Unicode symbols. " +
-          "Use ASCII emoticons like :) only if needed. " +
-          "If the reply would become extremely long, stop at a logical point and ask the user to type 'continue'.\n\n" +
+          "ASCII punctuation only. " +
+          "If the reply would exceed about 225 words, stop at a natural point and ask the user to type 'continue'.\n\n" +
           q
       })
     });
@@ -87,7 +91,7 @@ app.post("/ask", async (req, res) => {
     answer = "AI not reachable.";
   }
 
-  /* Make output Nokia-safe (ASCII only) */
+  /* Nokia-safe ASCII only */
   answer = answer.replace(/[^\x00-\x7F]/g, "");
 
   res.send(`
@@ -100,11 +104,14 @@ app.post("/ask", async (req, res) => {
 <body>
 
 <p><b>You:</b><br>${escapeHtml(q)}</p>
-<p><b>AI:</b><br><pre>${escapeHtml(answer)}</pre></p>
+
+<p><b>AI:</b><br>
+<pre>${escapeHtml(answer)}</pre>
+</p>
 
 <hr>
 
-<form method="POST" action="/ask">
+<form method="GET" action="/ask">
   <input type="text" name="q" size="20" autocomplete="off">
   <br><br>
   <button type="submit">Ask</button>
@@ -117,7 +124,7 @@ app.post("/ask", async (req, res) => {
   `);
 });
 
-/* HTML escape */
+/* Escape HTML safely */
 function escapeHtml(text) {
   return text
     .replace(/&/g, "&amp;")
@@ -126,5 +133,5 @@ function escapeHtml(text) {
 }
 
 app.listen(PORT, () => {
-  console.log("Nokia AI backend running on Render");
+  console.log("Nokia AI backend running");
 });
