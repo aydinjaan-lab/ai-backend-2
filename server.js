@@ -5,7 +5,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 /* 🔴 CHANGE THIS IF CLOUDFLARE URL CHANGES */
-const OLLAMA_URL = "https://Victor-administrative-lamps-blues.trycloudflare.com";
+const OLLAMA_URL = "https://studios-vii-mortgage-chips.trycloudflare.com";
 
 app.use(express.urlencoded({ extended: false }));
 
